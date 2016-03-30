@@ -1,6 +1,6 @@
 <project>
     <!-- If built for 1.6, can still use with 1.7. But have to use jdk.1.7 to build. -->
-    <property name="target.version" value="1.6"/>
+    <property name="target.version" value="1.8"/>
     <property name="run.classpath" value="bin"/>
     <property name="n_games" value="2"/>
 
