@@ -6,7 +6,7 @@ import hus.HusMove;
 
 import java.util.ArrayList;
 
-import student_player.mytools.MyTools;
+import student_player.mytools.*;
 
 /** A Hus player submitted by a student. */
 public class StudentPlayer extends HusPlayer {
@@ -28,10 +28,10 @@ public class StudentPlayer extends HusPlayer {
         //  - opponent_id
         long startTime = System.currentTimeMillis();
 
-        MyTools.EvaluationFunctionFactory factory = new MyTools.EvaluationFunctionFactory();
-        MyTools.EvaluationFunction basic = factory.getEvaluationFunction("basic");
+        Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory();
+        Functions.EvaluationFunction basic = factory.getEvaluationFunction("basic");
 
-        MyTools.MinimaxNode root = MyTools.makeMinimaxTree(board_state, player_id, 3);
+        Minimax.MinimaxNode root = Minimax.makeMinimaxTree(board_state, player_id, 3);
         HusMove chosenMove = root.getMinimaxMove(basic);
 
         System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime) + "ms.");
