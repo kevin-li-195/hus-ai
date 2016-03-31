@@ -32,8 +32,10 @@ public class StudentPlayer extends HusPlayer {
         MyTools.EvaluationFunction basic = factory.getEvaluationFunction("basic");
 
         MyTools.MinimaxNode root = MyTools.makeMinimaxTree(board_state, player_id, 3);
-        System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime) + ".");
+        HusMove chosenMove = root.getMinimaxMove(basic);
 
-        return root.getMinimaxMove(basic);
+        System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime) + "ms.");
+
+        return chosenMove;
     }
 }
