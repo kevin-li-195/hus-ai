@@ -26,11 +26,14 @@ public class StudentPlayer extends HusPlayer {
         // Have available:
         //  - player_id
         //  - opponent_id
+        long startTime = System.currentTimeMillis();
 
         MyTools.EvaluationFunctionFactory factory = new MyTools.EvaluationFunctionFactory();
         MyTools.EvaluationFunction basic = factory.getEvaluationFunction("basic");
 
-        MyTools.MinimaxNode root = MyTools.makeMinimaxTree(board_state, player_id, 4);
+        MyTools.MinimaxNode root = MyTools.makeMinimaxTree(board_state, player_id, 3);
+        System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime) + ".");
+
         return root.getMinimaxMove(basic);
     }
 }

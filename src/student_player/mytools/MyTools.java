@@ -208,4 +208,21 @@ public class MyTools {
             return (((a - b)/48)*100);
         }
     }
+
+    // Improved evaluation function that incorporates more aspects of the game.
+    // 1. Higher weighting wrt score for outer loop pits than inner loop pits.
+    // 2. We favor states where we have more pits that are available.
+    static class ImprovedEvaluationFunction extends EvaluationFunction {
+        public int compute(int id, HusBoardState s) {
+            float interiorMultiplier = 0.5f;
+            float exteriorMultiplier = 1.5f;
+            // Exterior pits are 0-16.
+            // Interior pits are 17-32.
+            
+            int[][] pits = s.getPits();
+            int[] my_pits = pits[id];
+            int[] opp_pits = pits[(id + 1) % 2];
+            return 0;
+        }
+    }
 }
