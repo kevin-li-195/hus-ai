@@ -17,15 +17,55 @@ public class MyTools {
     // Constructs a minimax tree of max depth d and returns the root.
     // Input: HusBoardState state, int d
     // Output: MinimaxNode root
-    static MinimaxNode makeMinimaxTree(NodeType t, HusBoardState s, int depth) {
-        ArrayList<HusMove> a = s.getLegalMoves();
-        switch(t) {
-            case MAX:
-            case MIN:
+    public static MinimaxNode makeMinimaxTree(HusBoardState s, int id, int depth) {
+        Iterator<HusMove> a = s.getLegalMoves().iterator();
+        MinimaxNode root = new MinimaxNode(NodeType.MAX, s, id);
+
+        while (a.hasNext()) {
+            HusMove m = a.next();
+            HusBoardState newState = (HusBoardState) s.clone();
+            newState.move(m);
+            MinimaxNode child = new MinimaxNode(NodeType.MIN, newState, m, id);
+            root.setChild(child);
+            child.setParent(root); // Do we need parent setting? Keep for now.
+            recMakeMinimax(child, id, depth-1);
+        }
+
+        return root;
+    }
+
+    // Helper function to recursively make minimax nodes.
+    static void recMakeMinimax(MinimaxNode node, int id, int depth) {
+        if (depth == 0) { return; }
+
+        HusBoardState s = node.getState();
+        Iterator<HusMove> it = s.getLegalMoves().iterator();
+        NodeType t = node.getType();
+
+        while (it.hasNext()) {
+            HusMove m = it.next();
+            HusBoardState ns = (HusBoardState) s.clone();
+            ns.move(m);
+
+            MinimaxNode newNode;
+
+            switch (t) {
+                case MAX:
+                    newNode = new MinimaxNode(NodeType.MIN, ns, m, id);
+                    break;
+                default:
+                    newNode = new MinimaxNode(NodeType.MAX, ns, m, id);
+            }
+
+            node.setChild(newNode);
+            newNode.setParent(node); // Do we need parent setting? Keep for now.
+
+            recMakeMinimax(newNode, id, depth-1);
         }
     }
 
-    class MinimaxNode {
+
+    public static class MinimaxNode {
         private NodeType type; // MAX or MIN minimax node.
         private ArrayList<MinimaxNode> children; // Children of node.
         private MinimaxNode parent; // Parent of node.
@@ -34,7 +74,13 @@ public class MyTools {
         private int value = 101; // Minimax value of this node. 101 is outside of range.
         private int myID; // Player id.
 
-        public MinimaxNode(NodeType t, HusBoardState s, HusMove m, int id) {
+        MinimaxNode(NodeType t, HusBoardState s, int id) {
+            type = t;
+            state = s;
+            myID = id;
+        }
+
+        MinimaxNode(NodeType t, HusBoardState s, HusMove m, int id) {
             type = t;
             state = s;
             move = m;
@@ -43,15 +89,16 @@ public class MyTools {
 
         // Input: int depth, Heuristic h
         // Output: HusMove mv
-        public HusMove getMinimaxMove(int depth, Heuristic h) {
+        public HusMove getMinimaxMove(Heuristic h) {
+            // Handle error for when there are no children.
             Iterator<MinimaxNode> c = getChildren().iterator();
             MinimaxNode n = c.next();
-            n.backup(depth, h);
+            n.backup(h);
             int maxScore = n.getValue();
             HusMove optMove = n.getMove();
             while (c.hasNext()) {
                 n = c.next();
-                n.backup(depth, h);
+                n.backup(h);
                 if (n.getValue() > maxScore) {
                     maxScore = n.getValue();
                     optMove = n.getMove();
@@ -62,6 +109,8 @@ public class MyTools {
 
         // Helper function to recursively back up the Minimax tree.
         // Call on root node to get full back up, or on partial tree to get a partial backing-up.
+        //
+        // Terminates when it encounters a node that has no children.
         //
         // Upgrade this to alpha-beta pruning later.
         void backup(Heuristic h) {
@@ -82,12 +131,12 @@ public class MyTools {
 
             Iterator<MinimaxNode> it = getChildren().iterator();
             MinimaxNode nextNode = it.next();
-            nextNode.backup(depth-1, h);
+            nextNode.backup(h);
             int optVal = nextNode.getValue();
 
             while (it.hasNext()) {
                 nextNode = it.next();
-                nextNode.backup(depth-1, h);
+                nextNode.backup(h);
                 int v = nextNode.getValue();
                 switch(type) {
                     case MAX:
@@ -105,6 +154,8 @@ public class MyTools {
             setValue(optVal);
         }
 
+        NodeType getType() { return type; }
+
         void setParent(MinimaxNode p) {
             parent = p;
         }
@@ -120,22 +171,25 @@ public class MyTools {
         
         HusMove getMove() { return move; }
         void setMove(HusMove m) { move = m; }
+
+        HusBoardState getState() { return state; }
     }
     
     // Abstract class for heuristics on HusBoardState states.
     // Heuristics return a normalized cost from 0 to 100.
-    abstract class Heuristic {
+    public abstract static class Heuristic {
         abstract int compute(int id, HusBoardState s);
     }
 
     // Heuristic factory to produce different heuristics for generic states
     // for the purpose of quickly testing different heuristics.
-    public class HeuristicFactory {
+    public static class HeuristicFactory {
         public Heuristic getHeuristic(String s) {
-            if (s == "Basic") {
-                return new BasicHeuristic();
-            } else {
-                return new BasicHeuristic();
+            switch (s) {
+                case "basic":
+                    return new BasicHeuristic();
+                default:
+                    return new BasicHeuristic();
             }
         }
     }
@@ -143,7 +197,7 @@ public class MyTools {
     // Super basic, non-admissible testing heuristic function that gives a lower cost
     // if we have more pits than the opponent.
     // Normalized from 0 to 100.
-    class BasicHeuristic extends Heuristic {
+    static class BasicHeuristic extends Heuristic {
         public int compute(int id, HusBoardState s) {
             int[][] pits = s.getPits();
             int[] my_pits = pits[id];
