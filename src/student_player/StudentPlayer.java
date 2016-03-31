@@ -27,8 +27,8 @@ public class StudentPlayer extends HusPlayer {
         //  - player_id
         //  - opponent_id
 
-        MyTools.HeuristicFactory factory = new MyTools.HeuristicFactory();
-        MyTools.Heuristic basic = factory.getHeuristic("basic");
+        MyTools.EvaluationFunctionFactory factory = new MyTools.EvaluationFunctionFactory();
+        MyTools.EvaluationFunction basic = factory.getEvaluationFunction("basic");
 
         MyTools.MinimaxNode root = MyTools.makeMinimaxTree(board_state, player_id, 4);
         return root.getMinimaxMove(basic);

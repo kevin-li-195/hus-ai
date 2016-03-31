@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class MyTools {
-    // Note: Evaluation functions also fall under the abstract
-    // class called Heuristic due to their both being called on states.
-    // They return the expected cost to a goal state.
 
     enum NodeType { MAX, MIN }
 
@@ -67,11 +64,11 @@ public class MyTools {
 
     public static class MinimaxNode {
         private NodeType type; // MAX or MIN minimax node.
-        private ArrayList<MinimaxNode> children; // Children of node.
+        private ArrayList<MinimaxNode> children = new ArrayList<MinimaxNode>(); // Children of node.
         private MinimaxNode parent; // Parent of node.
         private HusBoardState state; // Board state corresponding to this node.
         private HusMove move; // Move that resulted in this node.
-        private int value = 101; // Minimax value of this node. 101 is outside of range.
+        private int value = -1; // Minimax value of this node. -1 is outside of range.
         private int myID; // Player id.
 
         MinimaxNode(NodeType t, HusBoardState s, int id) {
@@ -87,9 +84,9 @@ public class MyTools {
             myID = id;
         }
 
-        // Input: int depth, Heuristic h
+        // Input: int depth, EvaluationFunction h
         // Output: HusMove mv
-        public HusMove getMinimaxMove(Heuristic h) {
+        public HusMove getMinimaxMove(EvaluationFunction h) {
             // Handle error for when there are no children.
             Iterator<MinimaxNode> c = getChildren().iterator();
             MinimaxNode n = c.next();
@@ -113,14 +110,14 @@ public class MyTools {
         // Terminates when it encounters a node that has no children.
         //
         // Upgrade this to alpha-beta pruning later.
-        void backup(Heuristic h) {
+        void backup(EvaluationFunction h) {
             if (state.gameOver()) { // If the game is over at this state, then we check for win loss.
                 if (state.getWinner() == myID) {
-                    setValue(0); // Winner gets cost of 0.
+                    setValue(100); // Winner gets score of 100.
                     return;
                 }
                 else {
-                    setValue(100); // Lose or cancelled for any reason gets cost of 100.
+                    setValue(0); // Lose or cancelled for any reason gets score of 0.
                     return;
                 }
             }
@@ -175,29 +172,29 @@ public class MyTools {
         HusBoardState getState() { return state; }
     }
     
-    // Abstract class for heuristics on HusBoardState states.
-    // Heuristics return a normalized cost from 0 to 100.
-    public abstract static class Heuristic {
+    // Abstract class for evaluation functions on HusBoardState states.
+    // Eval funcs return a normalized cost from 0 to 100.
+    public abstract static class EvaluationFunction {
         abstract int compute(int id, HusBoardState s);
     }
 
-    // Heuristic factory to produce different heuristics for generic states
+    // Evaluation function factory to produce different heuristics for generic states
     // for the purpose of quickly testing different heuristics.
-    public static class HeuristicFactory {
-        public Heuristic getHeuristic(String s) {
+    public static class EvaluationFunctionFactory {
+        public EvaluationFunction getEvaluationFunction(String s) {
             switch (s) {
                 case "basic":
-                    return new BasicHeuristic();
+                    return new BasicEvaluationFunction();
                 default:
-                    return new BasicHeuristic();
+                    return new BasicEvaluationFunction();
             }
         }
     }
 
-    // Super basic, non-admissible testing heuristic function that gives a lower cost
+    // Super basic testing evaluation function that gives a higher score
     // if we have more pits than the opponent.
     // Normalized from 0 to 100.
-    static class BasicHeuristic extends Heuristic {
+    static class BasicEvaluationFunction extends EvaluationFunction {
         public int compute(int id, HusBoardState s) {
             int[][] pits = s.getPits();
             int[] my_pits = pits[id];
@@ -208,7 +205,7 @@ public class MyTools {
                 a += my_pits[i];
                 b += opp_pits[i];
             }
-            return (((48 - (a - b))/48)*100);
+            return (((a - b)/48)*100);
         }
     }
 }
