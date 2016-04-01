@@ -6,18 +6,23 @@
 \maketitle
 \newpage
 
-Notes:
+\section{Notes}
 
-\begin{itemize}
-    \item Prepared by creating abstract classes to represent evaluation functions so that they can be easily swapped out
+Prepared by creating abstract classes to represent evaluation functions so that they can be easily swapped out
     in order to test different ones and see which would perform better. All evaluation functions would return a score normalized
     from 0 to 100, which was important because this way we could easily return scores of 100 for victory and 0 for loss/cancellation.
 
-    \item Began by implementing minimax with a very basic evaluation function that just used the difference in pits between my agent and
-    the opponent. More pits = higher score for me. In testing it turns out that this function would only search to a maximum depth of 4 on 
-    my machine; any higher depth would result in timeouts. It could beat the random agent around 90\% of the time, which was decent, but
-    when searching to a depth of 4, only around 150ms would be used in computation. Clearly a lot of capacity was being wasted, so I decided
-    to implement alpha-beta pruning in order to further deepen the search.
-\end{itemize}
+Began by implementing minimax with a very basic evaluation function that just used the difference in pits between my agent and
+    the opponent. More pits = higher score for me.
+
+In testing it turns out that this function would only search to a maximum depth of 4 on my machine;
+    any higher depth would result in timeouts. It could beat the random agent around 90\% of the time, which was decent, but
+    when searching to a depth of 4, only around 150ms would be used in computation.
+
+Clearly a lot of capacity was being wasted, so I decided to implement alpha-beta pruning in order to further deepen the search.
+    I noted that in minimax, I was constructing the entire tree first of depth N and then backing up the nodes of that tree. This would not
+    be efficient in alpha-beta pruning, as it would be wasteful to construct a tree and include nodes that would only be pruned off;
+    in other words, it would be ideal to forgo creating nodes (i.e. running moves) where we don't need to. My new implementation would
+    require this.
 
 \end{document}
