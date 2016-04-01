@@ -3,6 +3,7 @@ package student_player.mytools;
 import hus.HusBoardState;
 import hus.HusPlayer;
 import hus.HusMove;
+
 public class Functions {
     
     // Abstract class for evaluation functions on HusBoardState states.
@@ -52,7 +53,7 @@ public class Functions {
             // Exterior pits are 0-16.
             // Interior pits are 17-32.
             
-
+            // Complete this evaluation function.
 
             int[][] pits = s.getPits();
             int[] my_pits = pits[id];
