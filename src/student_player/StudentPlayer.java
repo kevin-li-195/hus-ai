@@ -26,15 +26,33 @@ public class StudentPlayer extends HusPlayer {
         // Have available:
         //  - player_id
         //  - opponent_id
+
+        int MAX_DEPTH = 6;
+
         long startTime = System.currentTimeMillis();
-
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory();
-        Functions.EvaluationFunction basic = factory.getEvaluationFunction("basic");
+        Functions.EvaluationFunction func = factory.getEvaluationFunction("basic");
 
-        Minimax.MinimaxNode root = Minimax.makeMinimaxTree(board_state, player_id, 3);
-        HusMove chosenMove = root.getMinimaxMove(basic);
+        AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, MAX_DEPTH);
+        t.start();
 
-        System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime) + "ms.");
+        HusMove chosenMove;
+
+        long makeTime = System.currentTimeMillis() - startTime;
+        System.out.println("Prep time: " + makeTime + "ms.");
+
+        try {
+            if (board_state.getTurnNumber() > 0) {
+                Thread.sleep(1925 - makeTime);
+            } else {
+                Thread.sleep(29000 - makeTime);
+            }
+            chosenMove = t.getMove();
+        } catch (InterruptedException e) {
+            chosenMove = t.getMove();
+        }
+
+        System.out.println("Move chosen.");
 
         return chosenMove;
     }

@@ -25,7 +25,6 @@ public class Minimax {
             newState.move(m);
             MinimaxNode child = new MinimaxNode(NodeType.MIN, newState, m, id);
             root.setChild(child);
-            child.setParent(root); // Do we need parent setting? Keep for now.
             recMakeMinimax(child, id, depth-1);
         }
 
@@ -56,7 +55,6 @@ public class Minimax {
             }
 
             node.setChild(newNode);
-            newNode.setParent(node); // Do we need parent setting? Keep for now.
 
             recMakeMinimax(newNode, id, depth-1);
         }
@@ -66,7 +64,6 @@ public class Minimax {
     public static class MinimaxNode {
         private NodeType type; // MAX or MIN minimax node.
         private ArrayList<MinimaxNode> children = new ArrayList<MinimaxNode>(); // Children of node.
-        private MinimaxNode parent; // Parent of node.
         private HusBoardState state; // Board state corresponding to this node.
         private HusMove move; // Move that resulted in this node.
         private int value = -1; // Minimax value of this node. -1 is outside of range.
@@ -153,11 +150,6 @@ public class Minimax {
         }
 
         NodeType getType() { return type; }
-
-        void setParent(MinimaxNode p) {
-            parent = p;
-        }
-        MinimaxNode getParent() { return parent; }
 
         void setChild(MinimaxNode c) {
             children.add(c);
