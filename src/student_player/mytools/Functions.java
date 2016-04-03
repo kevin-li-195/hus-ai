@@ -19,6 +19,8 @@ public class Functions {
             switch (s) {
                 case "basic":
                     return new BasicEvaluationFunction();
+                case "improved":
+                    return new ImprovedEvaluationFunction();
                 default:
                     return new BasicEvaluationFunction();
             }
@@ -50,15 +52,42 @@ public class Functions {
         public int compute(int id, HusBoardState s) {
             float interiorMultiplier = 0.5f;
             float exteriorMultiplier = 1.5f;
+            float singlePitPenalty = 0.5f;
             // Exterior pits are 0-16.
             // Interior pits are 17-32.
             
-            // Complete this evaluation function.
+            int myScore = 0;
+            int oppScore = 0;
 
             int[][] pits = s.getPits();
             int[] my_pits = pits[id];
             int[] opp_pits = pits[(id + 1) % 2];
-            return 0;
+
+            for (int i = 0; i < 17; i++) {
+                if (my_pits[i] == 1) {
+                    myScore -= singlePitPenalty;
+                } else {
+                    myScore += my_pits[i]*exteriorMultiplier;
+                }
+                if (opp_pits[i] == 1) {
+                    oppScore -= singlePitPenalty;
+                } else {
+                    oppScore += opp_pits[i]*exteriorMultiplier;
+                }
+            }
+            for (int j = 17; j < 32; j++) {
+                if (my_pits[j] == 1) {
+                    myScore -= singlePitPenalty;
+                } else {
+                    myScore += my_pits[j]*exteriorMultiplier;
+                }
+                if (opp_pits[j] == 1) {
+                    oppScore -= singlePitPenalty;
+                } else {
+                    oppScore += opp_pits[j]*exteriorMultiplier;
+                }
+            }
+            return Math.round((myScore-oppScore)/48.0f);
         }
     }
 }
