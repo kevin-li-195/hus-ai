@@ -87,7 +87,7 @@ public class Functions {
                     oppScore += opp_pits[j]*exteriorMultiplier;
                 }
             }
-            return Math.round((myScore-oppScore)/48.0f);
+            return Math.round(myScore-oppScore);
         }
     }
 }
