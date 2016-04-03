@@ -17,6 +17,9 @@ public class AlphaBeta {
         private Functions.EvaluationFunction evalFunc;
         private int myID;
         private int maxDepth;
+        private int branchesPruned = 0;
+        private int topLevelBranchesSearched = 0;
+        private int branchingFactor = 0;
         
         public SearchThread(HusBoardState s, Functions.EvaluationFunction f, int id, int depth) {
             startingState = s;
@@ -29,13 +32,16 @@ public class AlphaBeta {
             int LOW = Integer.MIN_VALUE;
             // We have no upper bound because we assume that the root node is a max node.
 
-            Iterator<HusMove> it = startingState.getLegalMoves().iterator();
+            ArrayList<HusMove> l = startingState.getLegalMoves();
+            Iterator<HusMove> it = l.iterator();
+            branchingFactor = l.size();
 
             while (it.hasNext() && !this.interrupted()) {
                 HusMove nextMove = it.next();
                 HusBoardState nextState = (HusBoardState) startingState.clone();
                 nextState.move(nextMove);
                 int val = alphaBetaPrune(nextState, evalFunc, Integer.MIN_VALUE, Integer.MAX_VALUE, maxDepth, true);
+                topLevelBranchesSearched++;
                 if (val > LOW) {
                     LOW = val;
                     setMove(nextMove);
@@ -53,51 +59,51 @@ public class AlphaBeta {
                 int maxDepth,
                 boolean isMax) {
 
-            int bestValue = -1;
+            int bestValue;
 
             // Base case at the end of the minimax tree.
             if (maxDepth == 0) {
                 return f.compute(myID, currentState);
             }
 
-            Iterator<HusMove> it = currentState.getLegalMoves().iterator();
+            ArrayList<HusMove> l = currentState.getLegalMoves();
+            int listSize = l.size();
 
-            while (it.hasNext()) {
-                // Always check that if the optimal move selected right now is outside of
-                // bounds, then we can never get a better move and so we should return.
-               
-                HusMove nextMove = it.next();
-                HusBoardState newState = (HusBoardState) currentState.clone();
-                newState.move(nextMove);
+            Iterator<HusMove> it = l.iterator();
 
+            if (isMax) {
+                bestValue = lowerBound;
 
-                if (isMax) {
-                    int val = alphaBetaPrune(newState, f, lowerBound, upperBound, maxDepth-1, false);
-                    // First check if nextnodevalue is greater than lower bound and if
-                    // it's greater than current value.
-                    //
-                    // If yes, check if it's greater than upper bound. If true, then
-                    // return, ensuring that the previous node that called this node
-                    // we just return as we have ascertained that our current best option
-                    // will never get selected. If not then we assign nextnodevalue to
-                    // current value.
-                    if (val > bestValue || bestValue == -1) {
-                        if (val > upperBound) {
-                            return -1;
-                        } else {
-                            bestValue = val;
-                            lowerBound = val;
-                        }
+                while (it.hasNext() && !this.interrupted()) {
+                    HusMove nextMove = it.next();
+                    HusBoardState newState = (HusBoardState) currentState.clone();
+                    newState.move(nextMove);
+                    int val = alphaBetaPrune(newState, f, bestValue, upperBound, maxDepth-1, false);
+                    listSize--;
+
+                    if (val > bestValue) {
+                        bestValue = val;
                     }
-                } else { // isMin
-                    int val = alphaBetaPrune(newState, f, lowerBound, upperBound, maxDepth-1, true);
-                    if (val < bestValue || bestValue == -1) {
-                        if (val < lowerBound) {
-                            return -1;
-                        } else {
-                            bestValue = val;
-                            upperBound = val;
-                        }
+
+                    if (val > upperBound) {
+                        addPrunedBranches(listSize);
+                        return upperBound;
+                    }
+                }
+            } else { // isMin
+                bestValue = upperBound;
+                while (it.hasNext() && !this.interrupted()) {
+                    HusMove nextMove = it.next();
+                    HusBoardState newState = (HusBoardState) currentState.clone();
+                    newState.move(nextMove);
+                    int val = alphaBetaPrune(newState, f, lowerBound, bestValue, maxDepth-1, true);
+                    listSize--;
+                    if (val < bestValue) {
+                        bestValue = val;
+                    }
+                    if (val < lowerBound) {
+                        addPrunedBranches(listSize);
+                        return lowerBound;
                     }
                 }
             }
@@ -114,5 +120,22 @@ public class AlphaBeta {
         public synchronized HusMove getMove() {
             return bestMove;
         }
+
+        synchronized void addPrunedBranches(int a) {
+            branchesPruned += a;
+        }
+        
+        public synchronized int getPrunedBranches() {
+            return branchesPruned;
+        }
+
+        public synchronized int getSearchedBranches() {
+            return topLevelBranchesSearched;
+        }
+
+        public synchronized int getBranchingFactor() {
+            return branchingFactor;
+        }
+
     }
 }

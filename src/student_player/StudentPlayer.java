@@ -27,11 +27,11 @@ public class StudentPlayer extends HusPlayer {
         //  - player_id
         //  - opponent_id
 
-        int MAX_DEPTH = 6;
+        int MAX_DEPTH = 5;
 
         long startTime = System.currentTimeMillis();
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory();
-        Functions.EvaluationFunction func = factory.getEvaluationFunction("basic");
+        Functions.EvaluationFunction func = factory.getEvaluationFunction("improved");
 
         AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, MAX_DEPTH);
         t.start();
@@ -39,11 +39,10 @@ public class StudentPlayer extends HusPlayer {
         HusMove chosenMove;
 
         long makeTime = System.currentTimeMillis() - startTime;
-        System.out.println("Prep time: " + makeTime + "ms.");
 
         try {
             if (board_state.getTurnNumber() > 0) {
-                Thread.sleep(1925 - makeTime);
+                Thread.sleep(1900 - makeTime);
             } else {
                 Thread.sleep(29000 - makeTime);
             }
@@ -51,8 +50,14 @@ public class StudentPlayer extends HusPlayer {
         } catch (InterruptedException e) {
             chosenMove = t.getMove();
         }
+        t.interrupt();
+        int branchesPruned = t.getPrunedBranches();
+        int topLevelBranchesSearched = t.getSearchedBranches();
+        int branchingFactor = t.getBranchingFactor();
 
-        System.out.println("Move chosen.");
+        System.out.println("Branches pruned: " + branchesPruned);
+        System.out.println("Top level branches searched: " + topLevelBranchesSearched);
+        System.out.println("Total top level branching factor: " + branchingFactor);
 
         return chosenMove;
     }
