@@ -25,4 +25,15 @@ Clearly a lot of capacity was being wasted, so I decided to implement alpha-beta
     in other words, it would be ideal to forgo creating nodes (i.e. running moves) where we don't need to. My new implementation would
     require this.
 
+After implementing alpha-beta pruning, I was able to search a bit deeper (specified at a depth of 5). I had also improved on the evaluation function
+that I was using to take into account interior and exterior rows along with spaces that only contained one pit. But the depth parameter was exactly the shortcoming
+of this approach; I had to specify a depth to which we should search, and if we weren't able to discover a move by the time we search to the specified depth then
+the algorithm would never return a move in time.
+
+After discussing with some colleagues I decided to implement iterative deepening in order to search to the deepest
+possible degree and thus try and search as deep as possible each time. Of course, in order to prevent the agent from wasting time and repeatedly searching shallow depths,
+it would need to start by searching to depth 4 or perhaps 5. I would also have to implement a way to determine a clever way of comparing the optimal move chosen from
+a shallower search with an intermediate move in a deeper search (i.e. in the case where we have completed a search of depth n, and the thread is terminated in the middle
+of searching in depth n+1). Further care would have to be taken in order to avoid as much as possible re-searching through already searched nodes.
+
 \end{document}
