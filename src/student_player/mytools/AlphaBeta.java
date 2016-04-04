@@ -45,6 +45,7 @@ public class AlphaBeta {
                 if (val > LOW) {
                     LOW = val;
                     setMove(nextMove);
+                    System.out.println("Move updated: " + nextMove.toPrettyString());
                 }
             }
         }
