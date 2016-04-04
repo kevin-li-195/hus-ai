@@ -2,4 +2,5 @@ project_specification.pdf
 code_description.pdf
 bin/
 logs/
+old-logs/
 *.swp
