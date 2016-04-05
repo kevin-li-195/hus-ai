@@ -50,6 +50,13 @@ public class Functions {
     // 2. We favor states where we have more pits that are available.
     static class ImprovedEvaluationFunction extends EvaluationFunction {
         public int compute(int id, HusBoardState s) {
+            if (s.gameOver()) {
+                if (s.getWinner() == id) {
+                    return 1000;
+                } else {
+                    return -1000;
+                }
+            }
             float interiorMultiplier = 0.5f;
             float exteriorMultiplier = 1.5f;
             float singlePitPenalty = 0.5f;

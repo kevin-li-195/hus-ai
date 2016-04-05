@@ -27,13 +27,13 @@ public class StudentPlayer extends HusPlayer {
         //  - player_id
         //  - opponent_id
 
-        int MAX_DEPTH = 5;
+        int STARTING_DEPTH = 2;
 
         long startTime = System.currentTimeMillis();
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory();
         Functions.EvaluationFunction func = factory.getEvaluationFunction("improved");
 
-        AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, MAX_DEPTH);
+        AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, STARTING_DEPTH);
         t.start();
 
         HusMove chosenMove;
@@ -43,20 +43,23 @@ public class StudentPlayer extends HusPlayer {
         try {
             if (board_state.getTurnNumber() > 0) {
                 Thread.sleep(1900 - makeTime);
+                t.interrupt();
             } else {
                 Thread.sleep(29000 - makeTime);
+                t.interrupt();
             }
             chosenMove = t.getMove();
         } catch (InterruptedException e) {
+            t.interrupt();
             chosenMove = t.getMove();
         }
-        t.interrupt();
+
+        //print move pretty move when it's chosen.
+        //System.out.println(chosenMove.toPrettyString());
         int branchesPruned = t.getPrunedBranches();
-        int topLevelBranchesSearched = t.getSearchedBranches();
         int branchingFactor = t.getBranchingFactor();
 
         System.out.println("Branches pruned: " + branchesPruned);
-        System.out.println("Top level branches searched: " + topLevelBranchesSearched);
         System.out.println("Total top level branching factor: " + branchingFactor);
 
         return chosenMove;
