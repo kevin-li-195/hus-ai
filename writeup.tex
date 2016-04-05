@@ -36,4 +36,16 @@ it would need to start by searching to depth 4 or perhaps 5. I would also have t
 a shallower search with an intermediate move in a deeper search (i.e. in the case where we have completed a search of depth n, and the thread is terminated in the middle
 of searching in depth n+1). Further care would have to be taken in order to avoid as much as possible re-searching through already searched nodes.
 
+Through observing my agent I noticed that towards the ends of games it would not take a move that would result in its immediate victory, and thus
+games would break down into these long torturous sessions of the agent chasing down opponent pits. It was through this observation that
+I discovered that in my alpha-beta pruning recursive function I was not taking into account whether the current state was a victory or loss state,
+which resulted in the agent searching beyond these terminal states. After having corrected this, along with lowering the computational overhead by reducing
+the use of unnecessary data structures (mainly Iterators), I was able to vastly reduce the number of turns it took for me to achieve victory against 
+the random agent!
+
+I then noticed an additional problem. As I was using iterative deepening, I was making the decision to throw away the previously obtained optimal solution from the
+previous depth of search and ended up using the newly generated move from the deeper depth, which theoretically should mean that the solution is better. But if the thread
+is interrupted before that new depth of search is completed, it is likely (and happens very often) that the 'new' solution is sub-optimal. I tried fixing this by properly ordering
+the board states that I would analyze, and...
+
 \end{document}
