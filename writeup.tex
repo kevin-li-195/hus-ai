@@ -51,10 +51,15 @@ the board states that I would analyze, and the number of branches that got prune
 Later on, I played my agent several times and managed to win using a strategy that focused on capturing as many pieces as possible. Since I was able to beat my agent, it
 did bode well for my agent and I thought that I should encode my strategy into an evaluation function.
 
-We should also try using the previous best moves from depths as starting points for searches instead of taking previous depth optimal moves!
+My agent was still inefficient because when it searched through depth X and found several moves (improving upon moves that were previously thought to be optimal but were not)
+and then moved on to depth X+1, it would look through those same suboptimal moves in the same order. This meant that occasionally when the thread terminates at the time
+limit, the agent might consider a move that is known to be sub-optimal as optimal and return that move. In order to fix this, when an optimal move is discovered, the agent
+will re-order the states through which it searches at the top level. This makes it search the optimal move first, fixing this problem of choosing a suboptimal move first.
+Of course, if a previously suboptimal move turns out to be better at a deeper depth, this agent will still find it as it is still optimal because it will end up searching
+through the same moves, just in a better order.
 
 Heavy rollout monte carlo?
 
-After ordering all possible states, try only exploring first X number of moves.
+After ordering all possible states, try only exploring first X number of moves. (should not be good)
 
 \end{document}
