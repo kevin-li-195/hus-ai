@@ -31,37 +31,40 @@ public class AlphaBeta {
         public void run() {
             int MAX_DEPTH = 50;
 
+            HusMove[] l = startingState.getLegalMoves().toArray(new HusMove[startingState.getLegalMoves().size()]); // All legal moves from starting state.
+            HusBoardState[] topLevelStates = new HusBoardState[l.length];
+            HashMap<HusBoardState, HusMove> stateMap = new HashMap<HusBoardState, HusMove>();
+
+            for (int a = 0; a < l.length; a++) {
+                HusMove nextMove = l[a];
+                HusBoardState newState = (HusBoardState) startingState.clone();
+                newState.move(nextMove);
+
+                stateMap.put(newState, nextMove);
+
+                topLevelStates[a] = newState;
+            }
+
+            Arrays.sort(topLevelStates, evalFunc.reversed());
+
+            System.out.println("Sorted top level states.");
+
+            branchingFactor = l.length; // Record branching factor for debugging.
+
+
             for (int depth = startingDepth; depth < MAX_DEPTH; depth++) {
                 if (this.isInterrupted()) { break; }
 
                 int LOW = Integer.MIN_VALUE;
                 // We have no upper bound because we assume that the root node is a max node.
-
-                HusMove[] l = startingState.getLegalMoves().toArray(new HusMove[startingState.getLegalMoves().size()]); // All legal moves from starting state.
-                HusBoardState[] topLevelStates = new HusBoardState[l.length];
-                HashMap<HusBoardState, HusMove> stateMap = new HashMap<HusBoardState, HusMove>();
-
-                for (int a = 0; a < l.length; a++) {
-                    HusMove nextMove = l[a];
-                    HusBoardState newState = (HusBoardState) startingState.clone();
-                    newState.move(nextMove);
-
-                    stateMap.put(newState, nextMove);
-
-                    topLevelStates[a] = newState;
-                }
-
-                Arrays.sort(topLevelStates, evalFunc.reversed());
-
-                System.out.println("Sorted top level states.");
-
-                branchingFactor = l.length; // Record branching factor for debugging.
-
                 int i = 0;
 
                 while (!this.isInterrupted() && i < topLevelStates.length) {
                     
                     HusBoardState nextState = topLevelStates[i];
+
+                    // todo: Every time we've found a better move, we remove it, push every other state up by one,
+                    // and then add it to the front.
 
                     int val = alphaBetaPrune(nextState, evalFunc, Integer.MIN_VALUE, Integer.MAX_VALUE, depth, true);
 
@@ -82,8 +85,6 @@ public class AlphaBeta {
                     // This would only occur in a case where a search is interrupted prematurely
                     // due to time constraints.
                     //
-                    // Here we will test the performance of both approaches.
-                    //
                     // My intuition is that a deeper search will win more often, even
                     // if we are removing all solutions that have been found from shallower searches.
                     //
@@ -98,16 +99,31 @@ public class AlphaBeta {
                     //
                     // We also do this ordering within the pruning function itself.
                     
+
+                    // todo: If the int value from this path corresponds to a victory value, then we stop searching
+                    // because this path guarantees victory. We might not have to program this if we always search for
+                    // the best path even from the previous depth though.
                     if (val > LOW) {
                         LOW = val;
                         HusMove nextMove = stateMap.get(nextState);
-                        setMove(nextMove);
-                        System.out.println("Move updated: " + nextMove.toPrettyString() + " at depth " + depth);
+                        if (nextMove != getMove()) {
+                            shiftToFront(topLevelStates, i);
+                            setMove(nextMove);
+                            System.out.println("Move updated: " + nextMove.toPrettyString() + " at depth " + depth);
+                        }
                     }
                     i++;
                 }
             }
             if (!this.isInterrupted()) { System.out.println("Thread terminated naturally."); }
+        }
+
+        void shiftToFront(HusBoardState[] arr, int i) {
+            HusBoardState temp = (HusBoardState) arr[i].clone();
+            for (int a = i; a > 0; a--) {
+                arr[a] = arr[a-1];
+            }
+            arr[0] = temp;
         }
 
         // Recursively expand and prune nodes. Returns the value of the node that this is called on
