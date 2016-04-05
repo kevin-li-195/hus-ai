@@ -120,7 +120,7 @@ public class Minimax {
                 }
             }
             if (getChildren().isEmpty()) {
-                setValue(h.compute(myID, state));; // Having no legal moves means we're at the bottom of the minimax tree.
+                setValue(h.compute(state));; // Having no legal moves means we're at the bottom of the minimax tree.
                 return;
             }
 
