@@ -4,8 +4,9 @@ import hus.HusBoardState;
 import hus.HusPlayer;
 import hus.HusMove;
 
+import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 
 import student_player.mytools.Functions;
 
@@ -37,14 +38,26 @@ public class AlphaBeta {
                 // We have no upper bound because we assume that the root node is a max node.
 
                 HusMove[] l = startingState.getLegalMoves().toArray(new HusMove[startingState.getLegalMoves().size()]); // All legal moves from starting state.
+                HusBoardState[] topLevelStates = new HusBoardState[l.length];
+                HashMap<HusBoardState, HusMove> stateMap = new HashMap<HusBoardState, HusMove>();
+
+                for (int a = 0; a < l.length; a++) {
+                    HusMove nextMove = l[a];
+                    HusBoardState newState = (HusBoardState) startingState.clone();
+                    newState.move(nextMove);
+
+                    stateMap.put(newState, nextMove);
+
+                    topLevelStates[a] = newState;
+                }
+
                 branchingFactor = l.length; // Record branching factor for debugging.
 
                 int i = 0;
 
-                while (!this.isInterrupted() && i < l.length) {
-                    HusMove nextMove = l[i];
-                    HusBoardState nextState = (HusBoardState) startingState.clone();
-                    nextState.move(nextMove);
+                while (!this.isInterrupted() && i < topLevelStates.length) {
+                    
+                    HusBoardState nextState = topLevelStates[i];
 
                     int val = alphaBetaPrune(nextState, evalFunc, Integer.MIN_VALUE, Integer.MAX_VALUE, depth, true);
 
@@ -74,8 +87,16 @@ public class AlphaBeta {
                     //
                     // This should also serve to address the null pointer issues when the agent
                     // does not find a move quickly enough with a specified depth.
+                    //
+                    // Note: We are attempting to solve the problem of selecting a subpar solution
+                    // and having the thread terminate early by properly ordering the states before calling
+                    // alphaBetaPrune on them.
+                    //
+                    // We also do this ordering within the pruning function itself.
+                    
                     if (val > LOW) {
                         LOW = val;
+                        HusMove nextMove = stateMap.get(nextState);
                         setMove(nextMove);
                         System.out.println("Move updated: " + nextMove.toPrettyString() + " at depth " + depth);
                     }
@@ -108,29 +129,44 @@ public class AlphaBeta {
 
             // Base case at the end of the minimax tree.
             if (depth == 0) {
-                return f.compute(myID, currentState);
+                return f.compute(currentState);
             }
 
             HusMove[] l = currentState.getLegalMoves().toArray(new HusMove[currentState.getLegalMoves().size()]);
-            int listSize = l.length;
 
+            HusBoardState[] allStates = new HusBoardState[l.length];
+
+            // Make array of all possible states from this current state for later sorting.
+            for (int a = 0; a < l.length; a++) {
+                HusMove nextMove = l[a];
+                HusBoardState newState = (HusBoardState) currentState.clone();
+                newState.move(nextMove);
+                allStates[a] = newState;
+            }
+
+            int branchesRemaining = l.length;
+
+            // Sort allStates using EvaluationFunction comparator, depending on min or max.
             if (isMax) {
                 bestValue = lowerBound;
 
+                // If max, sort in descending order (i.e., first we want to look
+                // at states where we are at an advantage).
+                Arrays.sort(allStates, f.reversed());
+
                 int i = 0;
                 while (i < l.length && !this.isInterrupted()) {
-                    HusMove nextMove = l[i];
-                    HusBoardState newState = (HusBoardState) currentState.clone();
-                    newState.move(nextMove);
+                    HusBoardState newState = allStates[i];
+
                     int val = alphaBetaPrune(newState, f, bestValue, upperBound, depth-1, false);
-                    listSize--;
+                    branchesRemaining--;
 
                     if (val > bestValue) {
                         bestValue = val;
                     }
 
                     if (val > upperBound) {
-                        addPrunedBranches(listSize);
+                        addPrunedBranches(branchesRemaining);
                         return upperBound;
                     }
                     i++;
@@ -139,18 +175,21 @@ public class AlphaBeta {
             } else { // isMin
                 bestValue = upperBound;
 
+                // If min, sort in ascending order (i.e., first we want to look
+                // at states where we are at a disadvantage).
+                Arrays.sort(allStates, f);
+
                 int i = 0;
                 while (i < l.length && !this.isInterrupted()) {
-                    HusMove nextMove = l[i];
-                    HusBoardState newState = (HusBoardState) currentState.clone();
-                    newState.move(nextMove);
+                    HusBoardState newState = allStates[i];
+
                     int val = alphaBetaPrune(newState, f, lowerBound, bestValue, depth-1, true);
-                    listSize--;
+                    branchesRemaining--;
                     if (val < bestValue) {
                         bestValue = val;
                     }
                     if (val < lowerBound) {
-                        addPrunedBranches(listSize);
+                        addPrunedBranches(branchesRemaining);
                         return lowerBound;
                     }
                     i++;
