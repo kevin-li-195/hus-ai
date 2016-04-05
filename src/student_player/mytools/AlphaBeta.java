@@ -31,15 +31,14 @@ public class AlphaBeta {
             int MAX_DEPTH = 50;
 
             for (int depth = startingDepth; depth < MAX_DEPTH; depth++) {
-                if (this.isInterrupted()) {
-                    System.out.println("Thread is interrupted. Killing now.");
-                    break;
-                }
+                if (this.isInterrupted()) { break; }
+
                 int LOW = Integer.MIN_VALUE;
                 // We have no upper bound because we assume that the root node is a max node.
 
-                HusMove[] l = startingState.getLegalMoves().toArray(new HusMove[startingState.getLegalMoves().size()]);
-                branchingFactor = l.length;
+                HusMove[] l = startingState.getLegalMoves().toArray(new HusMove[startingState.getLegalMoves().size()]); // All legal moves from starting state.
+                branchingFactor = l.length; // Record branching factor for debugging.
+
                 int i = 0;
 
                 while (!this.isInterrupted() && i < l.length) {
@@ -82,7 +81,6 @@ public class AlphaBeta {
                     }
                     i++;
                 }
-
             }
             if (!this.isInterrupted()) { System.out.println("Thread terminated."); }
         }
@@ -94,29 +92,37 @@ public class AlphaBeta {
                 Functions.EvaluationFunction f, 
                 int lowerBound, 
                 int upperBound,
-                int maxDepth,
+                int depth,
                 boolean isMax) {
 
             int bestValue;
 
+            // Depth weighted victories: shallower victories are better victories.
+            if (currentState.gameOver()) {
+                if (currentState.getWinner() == myID) {
+                    return depth*100 + 100;
+                } else {
+                    return -(depth*100) - 100;
+                }
+            }
+
             // Base case at the end of the minimax tree.
-            if (maxDepth == 0) {
+            if (depth == 0) {
                 return f.compute(myID, currentState);
             }
 
-            ArrayList<HusMove> l = currentState.getLegalMoves();
-            int listSize = l.size();
-
-            Iterator<HusMove> it = l.iterator();
+            HusMove[] l = currentState.getLegalMoves().toArray(new HusMove[currentState.getLegalMoves().size()]);
+            int listSize = l.length;
 
             if (isMax) {
                 bestValue = lowerBound;
 
-                while (it.hasNext() && !this.isInterrupted()) {
-                    HusMove nextMove = it.next();
+                int i = 0;
+                while (i < l.length && !this.isInterrupted()) {
+                    HusMove nextMove = l[i];
                     HusBoardState newState = (HusBoardState) currentState.clone();
                     newState.move(nextMove);
-                    int val = alphaBetaPrune(newState, f, bestValue, upperBound, maxDepth-1, false);
+                    int val = alphaBetaPrune(newState, f, bestValue, upperBound, depth-1, false);
                     listSize--;
 
                     if (val > bestValue) {
@@ -127,14 +133,18 @@ public class AlphaBeta {
                         addPrunedBranches(listSize);
                         return upperBound;
                     }
+                    i++;
                 }
+
             } else { // isMin
                 bestValue = upperBound;
-                while (it.hasNext() && !this.isInterrupted()) {
-                    HusMove nextMove = it.next();
+
+                int i = 0;
+                while (i < l.length && !this.isInterrupted()) {
+                    HusMove nextMove = l[i];
                     HusBoardState newState = (HusBoardState) currentState.clone();
                     newState.move(nextMove);
-                    int val = alphaBetaPrune(newState, f, lowerBound, bestValue, maxDepth-1, true);
+                    int val = alphaBetaPrune(newState, f, lowerBound, bestValue, depth-1, true);
                     listSize--;
                     if (val < bestValue) {
                         bestValue = val;
@@ -143,6 +153,7 @@ public class AlphaBeta {
                         addPrunedBranches(listSize);
                         return lowerBound;
                     }
+                    i++;
                 }
             }
 
