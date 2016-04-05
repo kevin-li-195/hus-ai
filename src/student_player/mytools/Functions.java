@@ -41,25 +41,17 @@ public class Functions {
                 a += my_pits[i];
                 b += opp_pits[i];
             }
-            return (((a - b)/48)*100);
+            return (a - b);
         }
     }
 
     // Improved evaluation function that incorporates more aspects of the game.
-    // 1. Higher weighting wrt score for outer loop pits than inner loop pits.
-    // 2. We favor states where we have more pits that are available.
+    // Higher weighting for outer loop pits than inner loop pits.
     static class ImprovedEvaluationFunction extends EvaluationFunction {
         public int compute(int id, HusBoardState s) {
-            if (s.gameOver()) {
-                if (s.getWinner() == id) {
-                    return 1000;
-                } else {
-                    return -1000;
-                }
-            }
-            float interiorMultiplier = 0.5f;
-            float exteriorMultiplier = 1.5f;
-            float singlePitPenalty = 0.5f;
+            float interiorMultiplier = 0.9f;
+            float exteriorMultiplier = 1.1f;
+
             // Exterior pits are 0-16.
             // Interior pits are 17-32.
             
@@ -71,28 +63,12 @@ public class Functions {
             int[] opp_pits = pits[(id + 1) % 2];
 
             for (int i = 0; i < 17; i++) {
-                if (my_pits[i] == 1) {
-                    myScore -= singlePitPenalty;
-                } else {
-                    myScore += my_pits[i]*exteriorMultiplier;
-                }
-                if (opp_pits[i] == 1) {
-                    oppScore -= singlePitPenalty;
-                } else {
-                    oppScore += opp_pits[i]*exteriorMultiplier;
-                }
+                myScore += my_pits[i]*exteriorMultiplier;
+                oppScore += opp_pits[i]*exteriorMultiplier;
             }
             for (int j = 17; j < 32; j++) {
-                if (my_pits[j] == 1) {
-                    myScore -= singlePitPenalty;
-                } else {
-                    myScore += my_pits[j]*exteriorMultiplier;
-                }
-                if (opp_pits[j] == 1) {
-                    oppScore -= singlePitPenalty;
-                } else {
-                    oppScore += opp_pits[j]*exteriorMultiplier;
-                }
+                myScore += my_pits[j]*exteriorMultiplier;
+                oppScore += opp_pits[j]*exteriorMultiplier;
             }
             return Math.round(myScore-oppScore);
         }
