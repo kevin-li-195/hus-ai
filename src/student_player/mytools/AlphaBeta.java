@@ -51,6 +51,10 @@ public class AlphaBeta {
                     topLevelStates[a] = newState;
                 }
 
+                Arrays.sort(topLevelStates, evalFunc.reversed());
+
+                System.out.println("Sorted top level states.");
+
                 branchingFactor = l.length; // Record branching factor for debugging.
 
                 int i = 0;
@@ -103,7 +107,7 @@ public class AlphaBeta {
                     i++;
                 }
             }
-            if (!this.isInterrupted()) { System.out.println("Thread terminated."); }
+            if (!this.isInterrupted()) { System.out.println("Thread terminated naturally."); }
         }
 
         // Recursively expand and prune nodes. Returns the value of the node that this is called on

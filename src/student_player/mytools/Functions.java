@@ -111,11 +111,11 @@ public class Functions {
             int[] my_pits = pits[id];
             int[] opp_pits = pits[(id + 1) % 2];
 
-            for (int i = 0; i < 17; i++) {
+            for (int i = 0; i < 16; i++) {
                 myScore += my_pits[i]*exteriorMultiplier;
                 oppScore += opp_pits[i]*exteriorMultiplier;
             }
-            for (int j = 17; j < 32; j++) {
+            for (int j = 16; j < 32; j++) {
                 myScore += my_pits[j]*exteriorMultiplier;
                 oppScore += opp_pits[j]*exteriorMultiplier;
             }
@@ -133,10 +133,52 @@ public class Functions {
         }
 
         public int compare(HusBoardState o1, HusBoardState o2) {
-            return 0;
+            int alignmentBonus = 1;
+            int myScore = 0;
+            int oppScore = 0;
+
+            int[][] pits = o1.getPits();
+            int[] my_pits = pits[id];
+            int[] opp_pits = pits[(id + 1) % 2];
+
+            for (int i = 0; i < my_pits.length; i++) {
+                if (i < 16 && my_pits[i] == 0 && my_pits[31-i] == 0) {
+                    myScore -= alignmentBonus;
+                }
+                if (i < 16 && opp_pits[i] == 0 && opp_pits[31-i] == 0) {
+                    myScore += alignmentBonus;
+                }
+                myScore += my_pits[i];
+                oppScore += opp_pits[i];
+            }
+
+            int left = myScore - oppScore;
+
+            int[][] pits2 = o2.getPits();
+            int[] my_pits2 = pits2[id];
+            int[] opp_pits2 = pits2[(id + 1) % 2];
+            int myScore2 = 0;
+            int oppScore2 = 0;
+
+            for (int j = 0; j < my_pits2.length; j++) {
+                if (j < 16 && my_pits2[j] == 0 && my_pits2[31-j] == 0) {
+                    oppScore2 += alignmentBonus;
+                }
+                if (j < 16 && opp_pits2[j] == 0 && opp_pits2[31-j] == 0) {
+                    myScore2 += alignmentBonus;
+                }
+                myScore2 += my_pits2[j];
+                oppScore2 += opp_pits2[j];
+            }
+
+            int right = myScore2 - oppScore2;
+
+            return left-right;
         }
 
+        // For a pit N, the pit vertically aligned with it is 35-N.
         public int compute(HusBoardState s) {
+            int alignmentBonus = 1;
             int myScore = 0;
             int oppScore = 0;
 
@@ -144,7 +186,18 @@ public class Functions {
             int[] my_pits = pits[id];
             int[] opp_pits = pits[(id + 1) % 2];
 
-            return 0; // placeholder
+            for (int i = 0; i < my_pits.length; i++) {
+                if (i < 16 && my_pits[i] == 0 && my_pits[31-i] == 0) {
+                    oppScore += alignmentBonus;
+                }
+                if (i < 16 && opp_pits[i] == 0 && opp_pits[31-i] == 0) {
+                    myScore += alignmentBonus;
+                }
+                myScore += my_pits[i];
+                oppScore += opp_pits[i];
+            }
+
+            return myScore-oppScore;
         }
     }
 }
