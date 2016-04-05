@@ -27,7 +27,7 @@ public class StudentPlayer extends HusPlayer {
         //  - player_id
         //  - opponent_id
 
-        int STARTING_DEPTH = 3;
+        int STARTING_DEPTH = 4;
 
         long startTime = System.currentTimeMillis();
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory(player_id);

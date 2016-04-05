@@ -57,14 +57,12 @@ public class AlphaBeta {
 
                 int LOW = Integer.MIN_VALUE;
                 // We have no upper bound because we assume that the root node is a max node.
+                
                 int i = 0;
 
                 while (!this.isInterrupted() && i < topLevelStates.length) {
                     
                     HusBoardState nextState = topLevelStates[i];
-
-                    // todo: Every time we've found a better move, we remove it, push every other state up by one,
-                    // and then add it to the front.
 
                     int val = alphaBetaPrune(nextState, evalFunc, Integer.MIN_VALUE, Integer.MAX_VALUE, depth, true);
 
@@ -105,11 +103,11 @@ public class AlphaBeta {
                     // the best path even from the previous depth though.
                     if (val > LOW) {
                         LOW = val;
-                        HusMove nextMove = stateMap.get(nextState);
-                        if (nextMove != getMove()) {
+                        HusMove n = stateMap.get(nextState);
+                        if (n != getMove()) {
                             shiftToFront(topLevelStates, i);
-                            setMove(nextMove);
-                            System.out.println("Move updated: " + nextMove.toPrettyString() + " at depth " + depth);
+                            setMove(n);
+                            System.out.println("Move updated: " + n.toPrettyString() + " at depth " + depth);
                         }
                     }
                     i++;
@@ -119,11 +117,25 @@ public class AlphaBeta {
         }
 
         void shiftToFront(HusBoardState[] arr, int i) {
-            HusBoardState temp = (HusBoardState) arr[i].clone();
+            HusBoardState temp = arr[i];
             for (int a = i; a > 0; a--) {
                 arr[a] = arr[a-1];
             }
             arr[0] = temp;
+        }
+
+        static boolean stateEquals(HusBoardState a, HusBoardState b) {
+            int[][] aBoard = a.getPits();
+            int[][] bBoard = b.getPits();
+            boolean f = true;
+
+            for (int i = 0; i < 32; i++) {
+                if (aBoard[0][i] != bBoard[0][i] || aBoard[1][i] != bBoard[1][i]) {
+                    f = false;
+                }
+            }
+
+            return (a.getTurnPlayer() == b.getTurnPlayer() && f);
         }
 
         // Recursively expand and prune nodes. Returns the value of the node that this is called on

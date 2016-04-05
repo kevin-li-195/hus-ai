@@ -178,7 +178,7 @@ public class Functions {
 
         // For a pit N, the pit vertically aligned with it is 35-N.
         public int compute(HusBoardState s) {
-            int alignmentBonus = 1;
+            int alignmentBonus = 2;
             int myScore = 0;
             int oppScore = 0;
 
