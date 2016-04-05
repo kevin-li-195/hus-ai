@@ -46,6 +46,15 @@ the random agent!
 I then noticed an additional problem. As I was using iterative deepening, I was making the decision to throw away the previously obtained optimal solution from the
 previous depth of search and ended up using the newly generated move from the deeper depth, which theoretically should mean that the solution is better. But if the thread
 is interrupted before that new depth of search is completed, it is likely (and happens very often) that the 'new' solution is sub-optimal. I tried fixing this by properly ordering
-the board states that I would analyze, and...
+the board states that I would analyze, and the number of branches that got pruned rose dramatically.
+
+Later on, I played my agent several times and managed to win using a strategy that focused on capturing as many pieces as possible. Since I was able to beat my agent, it
+did bode well for my agent and I thought that I should encode my strategy into an evaluation function.
+
+We should also try using the previous best moves from depths as starting points for searches instead of taking previous depth optimal moves!
+
+Heavy rollout monte carlo?
+
+After ordering all possible states, try only exploring first X number of moves.
 
 \end{document}
