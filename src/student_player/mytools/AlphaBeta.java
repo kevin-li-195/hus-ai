@@ -104,11 +104,9 @@ public class AlphaBeta {
                     if (val > LOW) {
                         LOW = val;
                         HusMove n = stateMap.get(nextState);
-                        if (n != getMove()) {
-                            shiftToFront(topLevelStates, i);
-                            setMove(n);
-                            System.out.println("Move updated: " + n.toPrettyString() + " at depth " + depth);
-                        }
+                        shiftToFront(topLevelStates, i);
+                        setMove(n);
+                        System.out.println("Move updated: " + n.toPrettyString() + " at depth " + depth);
                     }
                     i++;
                 }

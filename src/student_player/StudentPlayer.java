@@ -27,11 +27,11 @@ public class StudentPlayer extends HusPlayer {
         //  - player_id
         //  - opponent_id
 
-        int STARTING_DEPTH = 4;
+        int STARTING_DEPTH = 3;
 
         long startTime = System.currentTimeMillis();
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory(player_id);
-        Functions.EvaluationFunction func = factory.getEvaluationFunction("capture");
+        Functions.EvaluationFunction func = factory.getEvaluationFunction("basic");
 
         AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, STARTING_DEPTH);
         t.start();
