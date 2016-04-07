@@ -23,17 +23,17 @@ public class StudentPlayer extends HusPlayer {
      * for another example agent. */
     public HusMove chooseMove(HusBoardState board_state)
     {
-        // Have available:
-        //  - player_id
-        //  - opponent_id
-
-        int STARTING_DEPTH = 3;
-
-        long startTime = System.currentTimeMillis();
         Functions.EvaluationFunctionFactory factory = new Functions.EvaluationFunctionFactory(player_id);
         Functions.EvaluationFunction func = factory.getEvaluationFunction("basic");
 
-        AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, STARTING_DEPTH);
+        MonteCarlo.SearchThread t = new MonteCarlo.SearchThread(board_state, func, player_id);
+
+        long startTime = System.currentTimeMillis();
+
+        // int STARTING_DEPTH = 3;
+
+        // UNCOMMENT TO SWITCH TO ALPHA-BETA PRUNING.
+        // AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, STARTING_DEPTH);
         t.start();
 
         HusMove chosenMove;
@@ -54,13 +54,11 @@ public class StudentPlayer extends HusPlayer {
             chosenMove = t.getMove();
         }
 
-        //print move pretty move when it's chosen.
-        //System.out.println(chosenMove.toPrettyString());
-        int branchesPruned = t.getPrunedBranches();
-        int branchingFactor = t.getBranchingFactor();
+        // int branchesPruned = t.getPrunedBranches();
+        // int branchingFactor = t.getBranchingFactor();
 
-        System.out.println("Branches pruned: " + branchesPruned);
-        System.out.println("Total top level branching factor: " + branchingFactor);
+        // System.out.println("Branches pruned: " + branchesPruned);
+        // System.out.println("Total top level branching factor: " + branchingFactor);
 
         return chosenMove;
     }

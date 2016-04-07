@@ -16,10 +16,12 @@ public class MonteCarlo {
         public int numerator = 0;
         public int denominator = 0; 
         static int myID = 0;
-        static Comparator<MonteCarloNode> statsComparator = new StatsOrder();
+
+        static Comparator<MonteCarloNode> ucb = new UCBComparator();
 
         private HusBoardState state;
         ArrayList<MonteCarloNode> children = new ArrayList<MonteCarloNode>();
+        public MonteCarloNode parent;
         private HashMap<HusBoardState, HusMove> nodeMap = new HashMap<HusBoardState, HusMove>();
 
         boolean isMax;
@@ -39,55 +41,161 @@ public class MonteCarlo {
                 HusMove m = arr.get(a);
                 newS.move(m);
 
+                MonteCarloNode n = new MonteCarloNode(newS, false);
+                n.parent = this;
+                children.add(n);
+
                 nodeMap.put(newS, m);
             }
         }
 
-        public static class StatsOrder implements Comparator<MonteCarloNode> {
+        public static class UCBComparator implements Comparator<MonteCarloNode> {
+            static double c = 1.5;
+
             public int compare(MonteCarloNode o1, MonteCarloNode o2) {
-                if (o1.denominator == 0 && o2.denominator == 0) {
+                MonteCarloNode parent1 = o1.parent;
+                MonteCarloNode parent2 = o2.parent;
+
+                int parent1Visits = parent1.denominator;
+                int parent2Visits = parent2.denominator;
+
+                int o1Num = o1.numerator;
+                int o2Num = o2.numerator;
+
+                int o1Den = o1.denominator;
+                int o2Den = o2.denominator;
+
+                double o1Value;
+                double o2Value;
+
+                if (o1Den == 0) {
+                    o1Value = 0;
+                } else {
+                    o1Value = (double) o1Num / o1Den;
+                }
+
+                if (o2Den == 0) {
+                    o2Value = 0;
+                } else {
+                    o2Value = (double) o2Num / o2Den;
+                }
+
+                int o1Visits = o1.denominator;
+                int o2Visits = o2.denominator;
+
+                double o1UCB;
+                double o2UCB;
+
+                if (o1Visits == 0) {
+                    o1UCB = Double.POSITIVE_INFINITY;
+                } else {
+                    o1UCB = o1Value + (c * Math.sqrt(Math.log(parent1Visits)/o1Visits));
+                }
+
+                if (o2Visits == 0) {
+                    o2UCB = Double.POSITIVE_INFINITY;
+                } else {
+                    o2UCB = o2Value + (c * Math.sqrt(Math.log(parent2Visits)/o2Visits));
+                }
+
+                if (o1UCB == o2UCB) {
                     return 0;
-                } else if (o1.denominator == 0) {
-                    return 1;
-                } else if (o2.denominator == 0) {
+                } else if (o1UCB < o2UCB) {
                     return -1;
                 } else {
-                   if ((o1.getStat() - o2.getStat()) < 0) {
-                       return -1;
-                   } else {
-                       return 1;
-                   }
+                    return 1;
                 }
             }
         }
 
-        // Rolls out one iteration.
-        // Policies will order all states and then pick the first one.
-        // Thus we can use evaluation functions and use comparators to sort.
-        public void simulate(Comparator<HusBoardState> c) {
-            // Returns a path to the best leaf node + 1, where the last element is the most promising 
-            // child of that leaf node chosen by our comparator, and where we keep choosing the best move until we reach
-            // a leaf node. (in terms of statistic). getFrontierPath also adds the newly chosen node to the tree.
-            ArrayList<MonteCarloNode> path = getFrontierPath(c); 
-            MonteCarloNode newChild = path.get(path.size()-1);
+        // Performs one iteration of MCTS.
+        public static boolean simulate(MonteCarloNode currentNode, Comparator<HusBoardState> c) {
+            if (currentNode.children.isEmpty()) {
+                // Generate moves using c.
+                
+                HusBoardState startingState = currentNode.getState();
+                ArrayList<HusMove> moveList = currentNode.getState().getLegalMoves();
+                HusBoardState[] stateArray = new HusBoardState[moveList.size()];
 
-            // Play out from newChild and return win/loss stat.
-            boolean isWin = heavyRollout(newChild, c);
+                for (int i = 0; i < stateArray.length; i++) {
+                    HusBoardState newState = (HusBoardState) startingState.clone();
+                    HusMove m = moveList.get(i);
+                    newState.move(m);
 
-            // Update statistics along the path.
-            for (MonteCarloNode n : path) {
-                if (isWin) {
-                    n.numerator++;
+                    stateArray[i] = newState;
                 }
-                n.denominator++;
-            }
 
-            // Update our best move.
+                if (currentNode.isMax) {
+                    Arrays.sort(stateArray, c.reversed());
+                } else {
+                    Arrays.sort(stateArray, c);
+                }
+
+                HusBoardState optState = stateArray[0];
+
+                MonteCarloNode chosenNode;
+
+                if (currentNode.isMax) {
+                    if (optState.gameOver()) {
+                        if (optState.getWinner() == myID) {
+                            return true;
+                        } else {
+                            System.out.println("Something went wrong. Lost when you shouldn't have.");
+                            return false;
+                        }
+                    }
+                    chosenNode = new MonteCarloNode(optState, false);
+                } else {
+                    if (optState.gameOver()) {
+                        if (optState.getWinner() != myID) {
+                            return false;
+                        } else {
+                            System.out.println("Something went wrong. Won when you shouldn't have.");
+                            return true;
+                        }
+                    }
+                    chosenNode = new MonteCarloNode(optState, true);
+                }
+
+                chosenNode.parent = currentNode;
+                boolean win = heavyRollout(chosenNode, c);
+                currentNode.children.add(chosenNode);
+                if (win) {
+                    currentNode.numerator += 1;
+                    currentNode.denominator += 1;
+                    chosenNode.numerator += 1;
+                    chosenNode.denominator += 1;
+                    return true;
+                } else {
+                    currentNode.denominator += 1;
+                    chosenNode.denominator += 1;
+                    return false;
+                }
+            } else {
+                // choose node descentNode using UCB comparator
+                ArrayList<MonteCarloNode> nodeList = currentNode.children;
+                if (currentNode.isMax) {
+                    nodeList.sort(ucb.reversed());
+                } else {
+                    nodeList.sort(ucb);
+                }
+                MonteCarloNode optNode = nodeList.get(0);
+                boolean win = simulate(optNode, c);
+                if (win) {
+                    currentNode.numerator += 1;
+                    currentNode.denominator += 1;
+                    return true;
+                } else {
+                    currentNode.denominator += 1;
+                    return false;
+                }
+            }
         }
 
         static boolean heavyRollout(MonteCarloNode startNode, Comparator<HusBoardState> c) {
             HusBoardState startState = startNode.getState();
 
+            // Check for victory/loss state.
             if (startState.gameOver()) {
                 if (startState.getWinner() == myID) {
                     return true;
@@ -95,6 +203,7 @@ public class MonteCarlo {
                     return false;
                 }
             }
+
             ArrayList<HusMove> moves = startState.getLegalMoves();
             HusBoardState[] candidateStates = new HusBoardState[moves.size()];
 
@@ -119,72 +228,54 @@ public class MonteCarlo {
             return heavyRollout(nextNode, c);
         }
 
-        // Builds most promising path down to leaf node using minimax on the tree part
-        // and then adds one child to the tree using comparator and adds that child to the path.
-        //
-        // Returns the full path.
-        ArrayList<MonteCarloNode> getFrontierPath(Comparator<HusBoardState> c) {
+        // Builds path down to a leaf node.
+        ArrayList<MonteCarloNode> getFrontierPath(MonteCarloNode firstChild, Comparator<HusBoardState> c, boolean isExploration) {
 
             ArrayList<MonteCarloNode> returnPath = new ArrayList<MonteCarloNode>();
-            MonteCarloNode currentNode = this;
-            while (!currentNode.children.isEmpty()) {
-                returnPath.add(currentNode);
+            MonteCarloNode currentNode = firstChild;
 
-                if (currentNode.isMax) {
-                    currentNode.children.sort(statsComparator.reversed()); // Potentially inefficient sort
-                } else { // isMin
-                    currentNode.children.sort(statsComparator);
+            // Tree policy.
+            // Might want to probabilistically weight these because we might end up always choosing
+            // the same path. Test this.
+            if (isExploration) {
+                // BFS to find shortest path and then return
+            } else {
+                while (!currentNode.children.isEmpty()) {
+                    returnPath.add(currentNode);
+
+                    if (currentNode.isMax) {
+                    } else { // isMin
+                    }
+                    currentNode = currentNode.children.get(0);
                 }
-                currentNode = currentNode.children.get(0);
             }
-            // currentNode now holds the last most promising node in the chain.
-
-            HusBoardState currentState = currentNode.getState();
-
-            ArrayList<HusMove> candidateMoves = currentState.getLegalMoves();
-            HusBoardState[] candidateStates = new HusBoardState[candidateMoves.size()];
-
-            // Returns the optimal next node that we should play out.
-            for (int i = 0; i < candidateStates.length; i++) {
-                HusBoardState newState = (HusBoardState) currentState.clone(); 
-                newState.move(candidateMoves.get(i));
-                candidateStates[i] = newState;
-            }
-
-            MonteCarloNode newNode;
-
-            if (currentNode.isMax) {
-                Arrays.sort(candidateStates, c.reversed());
-                HusBoardState bestState = candidateStates[0];
-                newNode = new MonteCarloNode(bestState, false);
-            } else { // isMin
-                Arrays.sort(candidateStates, c);
-                HusBoardState bestState = candidateStates[0];
-                newNode = new MonteCarloNode(bestState, true);
-            }
-
-            currentNode.children.add(newNode);
-
-            returnPath.add(newNode);
 
             return returnPath;
         }
 
-        public HusMove getBestMove() {
-            children.sort(statsComparator.reversed());
-            return nodeMap.get(children.get(0).getState());
-        }
 
-        double getStat() {
-            return ((double) numerator / denominator);
+        public synchronized HusMove getBestMove() {
+            children.sort(ucb.reversed());
+            System.out.println("Got best move with score: " + children.get(0).numerator + "/" + children.get(0).denominator);
+            return nodeMap.get(children.get(0).getState());
         }
 
         HusBoardState getState() {
             return state;
         }
+
+        public void printRootStats() {
+            String s = "";
+            for (int a = 0; a < children.size(); a++) {
+                s += " ";
+                s += children.get(a).numerator + "/" + children.get(a).denominator;
+            }
+
+            System.out.println("Top level stats are: " + s);
+        }
     }
 
-    public static class MonteCarloSearchThread extends Thread {
+    public static class SearchThread extends Thread {
         private MonteCarloNode rootNode;
         private HusBoardState rootState;
         private Comparator<HusBoardState> comparator;
@@ -192,7 +283,7 @@ public class MonteCarlo {
 
         private HusMove bestMove;
 
-        MonteCarloSearchThread(HusBoardState s, Comparator<HusBoardState> c, int i) {
+        public SearchThread(HusBoardState s, Comparator<HusBoardState> c, int i) {
             rootState = s;
             comparator = c;
             myID = i;
@@ -201,17 +292,20 @@ public class MonteCarlo {
         public void run() {
             rootNode = new MonteCarloNode(rootState, true, myID);
             while (!this.isInterrupted()) {
-                rootNode.simulate(comparator);
-                setMove(rootNode.getBestMove());
+                MonteCarloNode.simulate(rootNode, comparator);
             }
+            rootNode.printRootStats();
         }
 
         synchronized void setMove(HusMove m) {
-            bestMove = m;
+            if (m != null && getMove() != m) {
+                bestMove = m;
+            } 
         }
 
-        synchronized HusMove getMove() {
-            return bestMove;
+
+        public synchronized HusMove getMove() {
+            return rootNode.getBestMove();
         }
     }
 }
