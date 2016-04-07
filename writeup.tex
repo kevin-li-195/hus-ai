@@ -58,8 +58,8 @@ will re-order the states through which it searches at the top level. This makes 
 Of course, if a previously suboptimal move turns out to be better at a deeper depth, this agent will still find it as it is still optimal because it will end up searching
 through the same moves, just in a better order.
 
-Heavy rollout monte carlo?
+Implemented Monte Carlo Tree Search with a heavy rollout policy. It performed far worse than minimax with alpha-beta pruning.
 
-After ordering all possible states, try only exploring first X number of moves. (should not be good)
+After ordering all possible states, try only exploring first X number of moves. Maybe square root of number of moves if there are more than 16. Or cap it at some number.(should not be good)
 
 \end{document}

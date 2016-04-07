@@ -30,6 +30,8 @@ public class Functions {
                     return new ImprovedEvaluationFunction(id);
                 case "capture":
                     return new CaptureFocusedEvaluationFunction(id);
+                case "branching":
+                    return new BasicPlusBranchingFactor(id);
                 default:
                     return new BasicEvaluationFunction(id);
             }
@@ -120,6 +122,27 @@ public class Functions {
                 oppScore += opp_pits[j]*exteriorMultiplier;
             }
             return Math.round(myScore-oppScore);
+        }
+    }
+
+    static class BasicPlusBranchingFactor extends EvaluationFunction {
+        int id;
+
+        public BasicPlusBranchingFactor(int i) {
+            id = i;
+        }
+
+        public int compare(HusBoardState o1, HusBoardState o2) {
+            int o1Val = compute(o1);
+            int o2Val = compute(o2);
+            return o1Val = o2Val;
+        }
+
+        public int compute(HusBoardState s) {
+            EvaluationFunction f = new BasicEvaluationFunction(id);
+            int ret = f.compute(s);
+            ret += s.getLegalMoves().size();
+            return ret;
         }
     }
 
