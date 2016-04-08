@@ -30,7 +30,7 @@ public class StudentPlayer extends HusPlayer {
 
         long startTime = System.currentTimeMillis();
 
-        int STARTING_DEPTH = 3;
+        int STARTING_DEPTH = 5;
 
         // UNCOMMENT TO SWITCH TO ALPHA-BETA PRUNING.
         AlphaBeta.SearchThread t = new AlphaBeta.SearchThread(board_state, func, player_id, STARTING_DEPTH);

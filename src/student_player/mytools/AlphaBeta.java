@@ -185,7 +185,10 @@ public class AlphaBeta {
                 Arrays.sort(allStates, f.reversed());
 
                 int i = 0;
-                while (i < l.length && !this.isInterrupted()) {
+                // Try ceiling of log? or square root?
+                // or searching a smaller "width" as the game progresses? (gotten from turnnumber)
+                int cap = allStates.length;
+                while (i < cap && !this.isInterrupted()) {
                     HusBoardState newState = allStates[i];
 
                     int val = alphaBetaPrune(newState, f, bestValue, upperBound, depth-1, false);
@@ -209,8 +212,9 @@ public class AlphaBeta {
                 // at states where we are at a disadvantage).
                 Arrays.sort(allStates, f);
 
+                int cap = allStates.length;
                 int i = 0;
-                while (i < l.length && !this.isInterrupted()) {
+                while (i < cap && !this.isInterrupted()) {
                     HusBoardState newState = allStates[i];
 
                     int val = alphaBetaPrune(newState, f, lowerBound, bestValue, depth-1, true);

@@ -31,6 +31,7 @@ public class Functions {
                 case "capture":
                     return new CaptureFocusedEvaluationFunction(id);
                 case "branching":
+                    System.out.println("Branching factor eval func selected.");
                     return new BasicPlusBranchingFactor(id);
                 default:
                     return new BasicEvaluationFunction(id);
@@ -135,14 +136,16 @@ public class Functions {
         public int compare(HusBoardState o1, HusBoardState o2) {
             int o1Val = compute(o1);
             int o2Val = compute(o2);
-            return o1Val = o2Val;
+            return o1Val - o2Val;
         }
 
         public int compute(HusBoardState s) {
             EvaluationFunction f = new BasicEvaluationFunction(id);
             int ret = f.compute(s);
-            ret += s.getLegalMoves().size();
-            return ret;
+            if (s.getTurnPlayer() == id) {
+                ret += s.getLegalMoves().size();
+            }
+            return (int) Math.floor(ret);
         }
     }
 
