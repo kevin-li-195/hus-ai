@@ -187,7 +187,7 @@ public class AlphaBeta {
                 int i = 0;
                 // Try ceiling of log? or square root?
                 // or searching a smaller "width" as the game progresses? (gotten from turnnumber)
-                int cap = allStates.length;
+                int cap = Math.min(8, allStates.length);
                 while (i < cap && !this.isInterrupted()) {
                     HusBoardState newState = allStates[i];
 
@@ -212,7 +212,7 @@ public class AlphaBeta {
                 // at states where we are at a disadvantage).
                 Arrays.sort(allStates, f);
 
-                int cap = allStates.length;
+                int cap = Math.min(8, allStates.length);
                 int i = 0;
                 while (i < cap && !this.isInterrupted()) {
                     HusBoardState newState = allStates[i];
